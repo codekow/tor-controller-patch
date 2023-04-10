@@ -1,0 +1,32 @@
+FROM quay.io/bugfest/tor as extract
+
+FROM --platform=$TARGETPLATFORM docker.io/library/alpine:3 as patched
+
+LABEL \
+      org.opencontainers.image.source "https://github.com/codekow/tor-controller-patch"
+
+WORKDIR /app
+
+RUN apk add --update --no-cache libevent
+
+# install tor
+RUN mkdir -p /usr/local/bin /usr/local/etc/tor /usr/local/share/tor
+COPY --from=extract /usr/local/bin/tor /usr/local/bin/tor
+COPY --from=extract /usr/local/bin/tor-resolve /usr/local/bin/.
+COPY --from=extract /usr/local/bin/tor-print-ed-signing-cert /usr/local/bin/.
+COPY --from=extract /usr/local/bin/tor-gencert /usr/local/bin/.
+COPY --from=extract /usr/local/bin/torify /usr/local/bin/.
+COPY --from=extract /usr/local/etc/tor/torrc.sample /app/.
+COPY --from=extract /usr/local/share/tor/geoip /usr/local/share/tor/.
+COPY --from=extract /usr/local/share/tor/geoip6 /usr/local/share/tor/.
+
+# install transports
+COPY --from=extract /usr/local/bin/obfs4proxy /usr/local/bin/.
+
+# fix perms
+RUN chmod g+w . && \
+    mkdir -p /run/tor/service
+
+USER 1001
+
+ENTRYPOINT ["/usr/local/bin/tor"]

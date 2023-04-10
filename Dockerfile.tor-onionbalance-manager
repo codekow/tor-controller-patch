@@ -1,0 +1,22 @@
+FROM quay.io/bugfest/tor-onionbalance-manager as builder
+
+FROM docker.io/library/alpine:3
+
+LABEL \
+      org.opencontainers.image.source "https://github.com/codekow/tor-controller-patch"
+
+ARG OB_VERSION="0.2.2"
+
+WORKDIR /app
+RUN chmod g+w .
+
+RUN apk add --update --no-cache \
+    git python3 py3-pip py3-wheel py3-cryptography py3-setproctitle py3-pycryptodomex
+RUN python3 -m pip --no-cache-dir install git+https://gitlab.torproject.org/tpo/core/onionbalance.git@${OB_VERSION}
+
+COPY --from=builder ./onionbalance-local-manager .
+
+USER 1001
+
+# ENTRYPOINT ["/usr/bin/onionbalance"]
+ENTRYPOINT ["./onionbalance-local-manager"]
