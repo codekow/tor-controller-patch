@@ -6,6 +6,7 @@ LABEL \
       org.opencontainers.image.source "https://github.com/codekow/tor-controller-patch"
 
 WORKDIR /app
+ENV HOME=/app
 
 RUN apk add --update --no-cache libevent
 
@@ -24,9 +25,11 @@ COPY --from=extract /usr/local/share/tor/geoip6 /usr/local/share/tor/.
 COPY --from=extract /usr/local/bin/obfs4proxy /usr/local/bin/.
 
 # fix perms
-RUN chmod g+w . && \
-    mkdir -p /run/tor/service
+RUN chmod -R g+w . /run && \
+    umask 0002
 
 USER 1001
 
-ENTRYPOINT ["/usr/local/bin/tor"]
+VOLUME /run/tor/service
+
+ENTRYPOINT [ "/usr/local/bin/tor" ]

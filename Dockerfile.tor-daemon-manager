@@ -1,10 +1,11 @@
 ARG TOR_VERSION="0.4.7.13"
-ARG TOR_IMAGE="quay.io/bugfest/tor"
+ARG TOR_IMAGE="ghcr.io/codekow/tor"
 
 FROM quay.io/bugfest/tor-daemon-manager:latest as builder
 
 FROM ${TOR_IMAGE}:${TOR_VERSION} as tor
 
 COPY --from=builder /root/tor-local-manager .
+COPY wrapper.sh /usr/local/bin/tor-local-manager
 
-ENTRYPOINT ["./tor-local-manager"]
+ENTRYPOINT ["/usr/local/bin/tor-local-manager"]
