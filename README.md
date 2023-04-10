@@ -24,11 +24,11 @@ Helm Values
 ```
 daemon:
   image:
-    repository: quay.io/bugfest/tor-daemon
+    repository: ghcr.io/codekow/tor-daemon
 manager:
   image:
-    repository: quay.io/bugfest/tor-daemon-manager
+    repository: ghcr.io/codekow/tor-daemon-manager
 onionbalance:
   image:
-    repository: quay.io/bugfest/tor-onionbalance-manager
+    repository: ghcr.io/codekow/tor-onionbalance-manager
 ```
