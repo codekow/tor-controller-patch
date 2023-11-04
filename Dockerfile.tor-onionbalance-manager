@@ -1,4 +1,4 @@
-FROM quay.io/bugfest/tor-onionbalance-manager as builder
+FROM quay.io/bugfest/tor-onionbalance-manager:latest as builder
 
 FROM docker.io/library/alpine:3
 
@@ -8,14 +8,14 @@ LABEL \
 ARG OB_VERSION="0.2.2"
 
 WORKDIR /app
-RUN chmod g+w .
+RUN chmod g+w /app
 
 RUN apk add --update --no-cache \
     git python3 py3-pip py3-wheel py3-cryptography py3-setproctitle py3-pycryptodomex
 RUN python3 -m pip --no-cache-dir install git+https://gitlab.torproject.org/tpo/core/onionbalance.git@${OB_VERSION}
 
-COPY --from=builder ./onionbalance-local-manager .
+COPY --from=builder /app/onionbalance-local-manager /app
 
 USER 1001
 
-ENTRYPOINT ["./onionbalance-local-manager"]
+ENTRYPOINT ["/app/onionbalance-local-manager"]

@@ -1,0 +1,15 @@
+# daemon:
+#  image:
+#    repository: ghcr.io/codekow/tor-daemon
+manager:
+  image:
+    repository: ghcr.io/codekow/tor-daemon-manager
+# onionbalance:
+#  image:
+#    repository: ghcr.io/codekow/tor-onionbalance-manager
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  runAsNonRoot: true

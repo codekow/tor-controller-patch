@@ -3,7 +3,7 @@ set -x
 NAME=$(basename $0)
 
 kludge(){
-  mkdir -p /run/tor/service
+  ls -lR /run
   chmod 700 /run/tor/service
 }
 

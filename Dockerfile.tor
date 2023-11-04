@@ -1,35 +1,41 @@
-FROM quay.io/bugfest/tor as extract
+ARG ALPINE_VERSION="3.18.4"
 
-FROM --platform=$TARGETPLATFORM docker.io/library/alpine:3 as patched
+# Build the obfs4 binary (cross-compiling)
+FROM --platform=$BUILDPLATFORM golang:1.20-alpine as obfs-builder
+ARG OBFS_VERSION="obfs4proxy-0.0.14-tor2"
+
+RUN apk add --update --no-cache git && \
+      git clone https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/obfs4.git --depth 1 --branch $OBFS_VERSION /obfs
+
+# Build obfs
+RUN mkdir /out
+WORKDIR /obfs
+ARG TARGETOS TARGETARCH
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=cache,target=/go/pkg \
+    CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /out/obfs4proxy ./obfs4proxy
+
+# Tor runner
+FROM --platform=$TARGETPLATFORM docker.io/library/alpine:$ALPINE_VERSION as runner
 
 LABEL \
-      org.opencontainers.image.source "https://github.com/codekow/tor-controller-patch"
+      org.opencontainers.image.source "https://github.com/bugfest/tor-docker"
 
 WORKDIR /app
 ENV HOME=/app
 
-RUN apk add --update --no-cache libevent
-
-# install tor
-RUN mkdir -p /usr/local/bin /usr/local/etc/tor /usr/local/share/tor
-COPY --from=extract /usr/local/bin/tor /usr/local/bin/tor
-COPY --from=extract /usr/local/bin/tor-resolve /usr/local/bin/.
-COPY --from=extract /usr/local/bin/tor-print-ed-signing-cert /usr/local/bin/.
-COPY --from=extract /usr/local/bin/tor-gencert /usr/local/bin/.
-COPY --from=extract /usr/local/bin/torify /usr/local/bin/.
-COPY --from=extract /usr/local/etc/tor/torrc.sample /app/.
-COPY --from=extract /usr/local/share/tor/geoip /usr/local/share/tor/.
-COPY --from=extract /usr/local/share/tor/geoip6 /usr/local/share/tor/.
+ARG TOR_VERSION="0.4.8.8"
+RUN apk add --upgrade --no-cache \
+      tor=~"${TOR_VERSION}" && \
+    chmod -R g+w /app /run
 
 # install transports
-COPY --from=extract /usr/local/bin/obfs4proxy /usr/local/bin/.
+COPY --from=obfs-builder /out/obfs4proxy /usr/local/bin/.
 
-# fix perms
-RUN chmod -R g+w . /run && \
-    umask 0002
-
+# change to non root
 USER 1001
 
+# create service dir
 VOLUME /run/tor/service
 
-ENTRYPOINT [ "/usr/local/bin/tor" ]
+ENTRYPOINT ["/usr/local/bin/tor"]

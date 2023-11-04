@@ -22,13 +22,15 @@ quay.io/bugfest/tor-onionbalance-manager
 Helm Values
 
 ```
-daemon:
-  image:
-    repository: ghcr.io/codekow/tor-daemon
-manager:
-  image:
-    repository: ghcr.io/codekow/tor-daemon-manager
-onionbalance:
-  image:
-    repository: ghcr.io/codekow/tor-onionbalance-manager
+helm repo add bugfest https://bugfest.github.io/tor-controller
+
+helm repo update
+
+helm upgrade \
+  --install \
+  --create-namespace \
+  --namespace tor-controller-system \
+  --values values.yaml \
+  tor-controller \
+  bugfest/tor-controller
 ```
