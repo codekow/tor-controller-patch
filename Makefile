@@ -35,3 +35,9 @@ push:
 	docker push ghcr.io/codekow/tor-daemon-manager:latest
 	docker push ghcr.io/codekow/tor-onionbalance-manager:0.9.2
 	docker push ghcr.io/codekow/tor-onionbalance-manager:latest
+
+.PHONY: retag-local-build
+retag:
+	docker tag quay.io/bugfest/tor:0.4.8.8 ghcr.io/codekow/tor:0.4.8.8
+	docker tag quay.io/bugfest/tor:latest ghcr.io/codekow/tor:latest
+	
